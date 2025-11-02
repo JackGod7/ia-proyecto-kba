@@ -1,0 +1,2 @@
+# Este comando crea un archivo .gitignore con las carpetas que queremos ignorar
+"venv/`n__pycache__/`n.streamlit/" | Out-File -FilePath .gitignore -Encoding utf8
