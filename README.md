@@ -102,6 +102,5 @@ Usa estos 3 escenarios para probar el agente y generar las capturas de pantalla 
 ### Autores
 
 * **Jack Aguilar** (`jack.aguilar.c@uni.pe`)
-* **Max Calla** (`edggar.calla.d@uni.pe`)
 * **Mitzuko Quispe** (`mitzuko.quispe.c@uni.pe`)
 * **Segundo Sigüeñas** (`segundo.siguenas.g@uni.pe`)
