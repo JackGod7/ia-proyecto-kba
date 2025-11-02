@@ -97,6 +97,46 @@ Usa estos 3 escenarios para probar el agente y generar las capturas de pantalla 
 | **2. Éxito (Regla Simple)** | `if True SyntaxError: expected ':'` | **Objetivo:** Demostrar otra regla en la KB (Regla 3).<br>**Captura:** Toma un screenshot del mensaje de éxito: `Sugerencia del Agente: Detecté un SyntaxError...`<br>**Análisis:** Explica que esta es una regla simple (Percepción -> Acción) que no requiere encadenamiento. |
 | **3. Fallo Controlado (Robustez)** | `ValueError: x not in list` | **Objetivo:** Demostrar la robustez del agente (Regla 5, "fallback").<br>**Captura:** Toma un screenshot del mensaje de error: `Resultado: Lo siento, no tengo una regla en mi Base de Conocimiento...`<br>**Análisis:** Explica que esta regla asegura que el agente siempre dé una respuesta, cumpliendo su ciclo de racionalidad. |
 
+
+
+🧠 Nuestra "Data"
+
+## 🏛️ Arquitectura y Base de Conocimiento (KB)
+
+Este no es un agente de IA neuronal (como un LLM). Es un agente de **IA Simbólica** puro que opera con lógica explícita, basándose estrictamente en los principios del **Capítulo 7 de AIMA**.
+
+* **Agente:** Agente Basado en Conocimiento (KBA).
+* **Motor de Inferencia:** `experta`, que implementa un motor de **Encadenamiento Hacia Adelante (Forward Chaining)**.
+* **Perceptor:** La función `parsear_error_a_hecho` (mapea el texto del error a un `Fact` estructurado).
+* **Actuador:** La interfaz de Streamlit (muestra la `Sugerir` final).
+
+### Flujo Lógico del Ciclo (TELL/ASK)
+
+Cuando un usuario presiona el botón, ocurre el siguiente ciclo:
+
+1.  **Percepción:** El `st.text_area` captura el `string` del error.
+2.  **`TELL` (Decir):**
+    * El **Perceptor** (`parsear_error_a_hecho`) convierte el `string` en un `Fact` (ej. `Error(tipo='ModuleNotFoundError', ...)`).
+    * Este `Fact` inicial se declara (`agente.declare()`) en la Memoria de Trabajo (WM).
+3.  **`ASK` (Preguntar):**
+    * `agente.run()` inicia el motor de **Encadenamiento Hacia Adelante**.
+    * El motor "dispara" las reglas cuyas premisas coinciden con los hechos en la WM.
+    * Por ejemplo, `Error(...)` dispara la `regla_detectar_modulo_faltante`.
+    * Esta regla *añade un nuevo hecho* (`FaltaModulo(...)`) a la WM.
+    * Este *nuevo hecho* dispara la `regla_sugerir_instalacion`.
+    * El ciclo se detiene cuando no hay más reglas que disparar.
+4.  **Acción:** La interfaz busca el `Fact` final (`Sugerir(...)`) en la WM y muestra el resultado al usuario.
+
+### Base de Conocimiento (KB) - Los "Datos" del Agente
+
+En un KBA, los "datos" no son un archivo CSV, sino la **lógica de la Base de Conocimiento**. Esta tabla resume los casos que nuestro agente puede resolver:
+
+| Caso / Error Percibido | Regla(s) en el Código | Lógica de Inferencia (AIMA) | Respuesta/Acción del Agente |
+| :--- | :--- | :--- | :--- |
+| **`ModuleNotFoundError`** | `regla_detectar_modulo_faltante` (R1)<br/>`regla_sugerir_instalacion` (R2) | **Encadenamiento Hacia Adelante**<br/>`Error(...)` → `FaltaModulo(...)` → `Sugerir(...)` | "El módulo 'X' no está instalado. Ejecuta: pip install X" |
+| **`SyntaxError`** (con ":") | `regla_syntax_error_colon` (R3) | **Regla Simple**<br/>`Error(...)` → `Sugerir(...)` | "Detecté un SyntaxError. Revisa si olvidaste dos puntos ':'..." |
+| **`ImportError`** (general) | `regla_import_error_general` (R4) | **Regla Simple**<br/>`Error(...)` → `Sugerir(...)` | "Error al importar: 'X'. Verifica el nombre (¿es un typo?)..." |
+| **Cualquier Otro Error** | `regla_fallback_desconocido` (R5) | **Regla Simple (Fallback)**<br/>`Error(Desconocido, ...)` → `Sugerir(...)` | "Lo siento, no tengo una regla en mi Base de Conocimiento..." |
 ---
 
 ### Autores
